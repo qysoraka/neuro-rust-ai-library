@@ -35,4 +35,31 @@ fn main() -> Result<(), Error> {
 
 
     // Fit the network
-    nn.fit(&data, 100,
+    nn.fit(&data, 100, 6, Some(1), Some(vec![Metrics::Accuracy]));
+
+    // Evaluate the trained model on the test set
+    nn.evaluate(&data, Some(vec![Metrics::Accuracy]));
+
+
+    // Predict the output of some images from the test set
+    let input = ImageDataSet::load_image_vec(&vec![
+        Path::new("datasets/MNIST/test/1/5.png"),
+        Path::new("datasets/MNIST/test/3/2008.png"),
+        Path::new("datasets/MNIST/test/5/59.png"),
+        Path::new("datasets/MNIST/test/9/104.png")
+    ], (28, 28), data.image_ops())?;
+
+    let predictions = nn.predict_class(&input);
+    print_prediction(&predictions);
+
+    Ok(())
+}
+
+fn print_prediction(predictions: &Vec<(String, PrimitiveType)>) {
+    println!("Predictions:");
+    let mut index = 0;
+    for (class, probability) in predictions {
+        index += 1;
+        println!("image {}: class: {}, probability: {}", index, class, probability);
+    }
+}

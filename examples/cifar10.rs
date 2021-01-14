@@ -26,4 +26,24 @@ fn main() -> Result<(), Error> {
     let mut nn = Network::new(Dim::new(&[32, 32, 3, 1]), losses::SoftmaxCrossEntropy::new(), Adam::new(0.001), None)?;
     nn.add(Conv2D::new(32, (3, 3), (1, 1), Padding::Same));
     nn.add(Conv2D::new(32, (3, 3), (1, 1), Padding::Same));
-    nn.add(
+    nn.add(MaxPool2D::new((2, 2)));
+    nn.add(Conv2D::new(64, (3, 3), (1, 1), Padding::Same));
+    nn.add(Conv2D::new(64, (3, 3), (1, 1), Padding::Same));
+    nn.add(MaxPool2D::new((2, 2)));
+    nn.add(Conv2D::new(64, (3, 3), (1, 1), Padding::Same));
+
+    nn.add(Flatten::new());
+    nn.add(Dense::new(64, Activation::ReLU));
+    nn.add(Dense::new(10, Activation::Softmax));
+
+    println!("{}", nn);
+
+    // Fit the model
+    nn.fit(&data, 32, 10, Some(1), Some(vec![Metrics::Accuracy]));
+    nn.save("cifar_model.h5")?;
+
+    // Evaluate the trained model on the test set
+    nn.evaluate(&data, Some(vec![Metrics::Accuracy]));
+
+    Ok(())
+}

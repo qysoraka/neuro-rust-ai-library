@@ -31,4 +31,10 @@ fn main() -> Result<(), Error> {
 
     // Predictions: create two inputs: (-0.5, 0.92, 0.35) and (0.45, -0.72, -0.12).
     let inputs = Tensor::new(&[-0.5, 0.92, 0.35, 0.45, -0.72, -0.12], Dim::new(&[3, 1, 1, 2]));
-    let res = nn.predict(&inputs); 
+    let res = nn.predict(&inputs); // expected: -0.957 and -0.4644 respectively.
+    println!("Predictions:");
+    res.print_tensor();
+
+    Ok(())
+}
+

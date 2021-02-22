@@ -31,4 +31,30 @@ impl<'a> BatchIterator<'a> {
         };
 
         BatchIterator {
-            data
+            data,
+            num_samples,
+            batch_size,
+            batch: 0,
+            num_batches
+        }
+    }
+
+    /// Returns the number of batches that the iterator will produce.
+    pub(crate) fn num_batches(&self) -> u64 {
+        self.num_batches
+    }
+}
+
+impl<'a> std::iter::Iterator for BatchIterator<'a> {
+    type Item = (Tensor, Tensor);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.batch < self.num_batches {
+            // Compute lower and upper bounds to retrieve samples
+            let lb = (self.batch * self.batch_size) as usize;
+            let mut ub = ((self.batch + 1) * self.batch_size - 1) as usize;
+            if ub >= self.num_samples as usize {
+                ub = (self.num_samples - 1) as usize;
+            }
+
+            // Create mini-bat

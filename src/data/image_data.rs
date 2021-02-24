@@ -567,3 +567,71 @@ impl ImageDataSetBuilder {
                 Ok(ImageDataSet {
                     input_shape: Dim::new(&[1, 1, 1, 1]),
                     output_shape: Dim::new(&[1, 1, 1, 1]),
+                    image_size: self.image_size,
+                    image_ops: ImageOps::default(),
+                    num_train_samples: 0,
+                    num_valid_samples: 0,
+                    classes: Vec::new(),
+                    x_train: Tensor::new_empty_tensor(),
+                    y_train: Tensor::new_empty_tensor(),
+                    x_valid: None,
+                    y_valid: None,
+                    x_test: None,
+                    y_test: None,
+                })
+            }, */
+            Source::Dir => {
+                ImageDataSet::from_dir(self.path, self.image_size, self.one_hot_encode, self.valid_frac, self.image_ops)
+            }
+        }
+    }
+
+    /// Flips the images horizontally with the given probability.
+    pub fn hflip(mut self, prob: f64) -> ImageDataSetBuilder {
+        if prob < 0. || prob > 1. {
+            panic!("The probability must be between 0 and 1.")
+        }
+        self.image_ops.hflip = Some(prob);
+        self
+    }
+
+    /// Flips the images vertically with the given probability.
+    pub fn vflip(mut self, prob: f64) -> ImageDataSetBuilder {
+        if prob < 0. || prob > 1. {
+            panic!("The probability must be between 0 and 1.")
+        }
+
+        self.image_ops.vflip = Some(prob);
+        self
+    }
+
+    /// One hot encodes the labels.
+    pub fn one_hot_encode(mut self) -> ImageDataSetBuilder {
+        self.one_hot_encode = true;
+        self
+    }
+
+    /// Rotates the images by an angle drawn from a uniform distribution with bounds ±`angle` (in degrees). A rotation is applied with the given probability.
+    pub fn rotate(mut self, angle: i32, prob: f64) -> ImageDataSetBuilder {
+        if prob < 0. || prob > 1. {
+            panic!("The probability must be between 0 and 1.")
+        }
+        self.image_ops.rotation = Some((angle, prob));
+        self
+    }
+
+    /// Splits the data into a training and validation sets.
+    pub fn valid_split(mut self, valid_frac: f64) -> ImageDataSetBuilder {
+        if valid_frac <= 0. || valid_frac >= 1. {
+            panic!("The validation fraction must be between 0 and 1 (excluded).")
+        }
+        self.valid_frac = Some(valid_frac);
+        self
+    }
+
+    /// Scales the images by multiplying each pixel by the given factor.
+    pub fn scale(mut self, factor: PrimitiveType) -> ImageDataSetBuilder {
+        self.image_ops.scale = Some(factor);
+        self
+    }
+}

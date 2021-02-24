@@ -57,4 +57,16 @@ impl<'a> std::iter::Iterator for BatchIterator<'a> {
                 ub = (self.num_samples - 1) as usize;
             }
 
-            // Create mini-bat
+            // Create mini-batches
+            let seqs = &[Seq::default(), Seq::default(), Seq::default(), Seq::new(lb as f64, ub as f64, 1.0)];
+            let mini_batch_x = index(&self.data.0, seqs);
+            let mini_batch_y = index(&self.data.1, seqs);
+
+            self.batch += 1;
+
+            Some((mini_batch_x, mini_batch_y))
+        } else {
+            None
+        }
+    }
+}

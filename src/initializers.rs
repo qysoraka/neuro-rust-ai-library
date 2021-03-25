@@ -56,4 +56,32 @@ impl From<&H5Initializer> for Initializer {
             "NormalScaled" => Initializer::NormalScaled(h5_init.values[0], h5_init.values[1]),
             "Ones" => Initializer::Ones,
             "Uniform" => Initializer::Uniform,
-            "UniformBounded" => Initializer::UniformBounded(h5_init.
+            "UniformBounded" => Initializer::UniformBounded(h5_init.values[0], h5_init.values[1]),
+            "Zeros" => Initializer::Zeros,
+            _ => panic!("Unrecognized initializer"),
+        }
+    }
+}
+
+
+impl Initializer {
+
+    /// Creates a tensor with random values generated from the distribution specified by the initializer.
+    ///
+    /// # Arguments
+    ///
+    /// * `dims` - The dimensions of the tensor created.
+    /// * `fan_in` - The number of input units.
+    /// * `fan_out` - The number of output units.
+    pub(crate) fn new_tensor(self,
+                             dims: Dim,
+                             fan_in: u64,
+                             fan_out: u64
+    ) -> Tensor {
+        match self {
+            Initializer::Constant(x) => constant(x, dims),
+            Initializer::GlorotNormal => {
+                let standard_deviation = (2. / (fan_out + fan_in) as PrimitiveType).sqrt();
+                Tensor::scaled_normal(0 as PrimitiveType, standard_deviation, dims)
+            },
+   

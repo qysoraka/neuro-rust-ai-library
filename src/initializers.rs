@@ -37,4 +37,23 @@ pub enum Initializer {
 
 #[derive(hdf5::H5Type, Clone, Debug)]
 #[repr(C)]
-pub(crate) s
+pub(crate) struct H5Initializer {
+    name: hdf5::types::VarLenUnicode,
+    values: hdf5::types::VarLenArray<PrimitiveType>,
+}
+
+impl From<&H5Initializer> for Initializer {
+    fn from(h5_init: &H5Initializer) -> Self {
+        match h5_init.name.as_str() {
+            "Constant" => Initializer::Constant(h5_init.values[0]),
+            "GlorotNormal" => Initializer::GlorotNormal,
+            "GlorotUniform" => Initializer::GlorotUniform,
+            "HeNormal" => Initializer::HeNormal,
+            "HeUniform" => Initializer::HeUniform,
+            "LecunNormal" => Initializer::LecunNormal,
+            "LecunUniform" => Initializer::LecunUniform,
+            "Normal" => Initializer::Normal,
+            "NormalScaled" => Initializer::NormalScaled(h5_init.values[0], h5_init.values[1]),
+            "Ones" => Initializer::Ones,
+            "Uniform" => Initializer::Uniform,
+            "UniformBounded" => Initializer::UniformBounded(h5_init.

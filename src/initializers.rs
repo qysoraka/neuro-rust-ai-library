@@ -84,4 +84,21 @@ impl Initializer {
                 let standard_deviation = (2. / (fan_out + fan_in) as PrimitiveType).sqrt();
                 Tensor::scaled_normal(0 as PrimitiveType, standard_deviation, dims)
             },
-   
+            Initializer::GlorotUniform => {
+                let limit = (6. / (fan_out + fan_in) as PrimitiveType).sqrt();
+                Tensor::scaled_uniform(-limit, limit, dims)
+            },
+            Initializer::HeNormal => {
+                let standard_deviation = (2. / fan_in as PrimitiveType).sqrt();
+                Tensor::scaled_normal(0 as PrimitiveType, standard_deviation, dims)
+            },
+            Initializer::HeUniform => {
+                let limit = (6. / fan_in as PrimitiveType).sqrt();
+                Tensor::scaled_uniform(-limit, limit, dims)
+            },
+            Initializer::LecunNormal => {
+                let standard_deviation = (1. / fan_in as PrimitiveType).sqrt();
+                Tensor::scaled_normal(0 as PrimitiveType, standard_deviation, dims)
+            },
+            Initializer::LecunUniform => {
+                let limit = (3. / fan_in as PrimitiveType

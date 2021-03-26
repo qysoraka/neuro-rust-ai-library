@@ -101,4 +101,19 @@ impl Initializer {
                 Tensor::scaled_normal(0 as PrimitiveType, standard_deviation, dims)
             },
             Initializer::LecunUniform => {
-                let limit = (3. / fan_in as PrimitiveType
+                let limit = (3. / fan_in as PrimitiveType).sqrt();
+                Tensor::scaled_uniform(-limit, limit, dims)
+            },
+            Initializer::Normal => Tensor::scaled_normal(0 as PrimitiveType, 0.01, dims),
+            Initializer::NormalScaled(mean, standard_deviation) => Tensor::scaled_normal(mean, standard_deviation, dims),
+            Initializer::Ones => Tensor::ones(dims),
+            Initializer::Uniform => Tensor::scaled_uniform(-0.01, 0.01, dims),
+            Initializer::UniformBounded(lb, ub) => Tensor::scaled_uniform(lb, ub, dims),
+            Initializer::Zeros => Tensor::zeros(dims),
+        }
+    }
+
+    pub(crate) fn save(&self, dataset: &hdf5::Dataset) -> hdf5::Result<()> {
+        match self {
+            Initializer::Constant(val) => dataset.write(&[H5Initializer { name: hdf5::types::VarLenUnicode::from_str("Constant").unwrap(), values: hdf5::types::VarLenArray::from_slice(&[*val]) }])?,
+            Initializer::GlorotNormal => data

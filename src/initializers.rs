@@ -116,4 +116,8 @@ impl Initializer {
     pub(crate) fn save(&self, dataset: &hdf5::Dataset) -> hdf5::Result<()> {
         match self {
             Initializer::Constant(val) => dataset.write(&[H5Initializer { name: hdf5::types::VarLenUnicode::from_str("Constant").unwrap(), values: hdf5::types::VarLenArray::from_slice(&[*val]) }])?,
-            Initializer::GlorotNormal => data
+            Initializer::GlorotNormal => dataset.write(&[H5Initializer { name: hdf5::types::VarLenUnicode::from_str("GlorotNormal").unwrap(), values: hdf5::types::VarLenArray::from_slice(&[0.]) }])?,
+            Initializer::GlorotUniform => dataset.write(&[H5Initializer { name: hdf5::types::VarLenUnicode::from_str("GlorotUniform").unwrap(), values: hdf5::types::VarLenArray::from_slice(&[0.]) }])?,
+            Initializer::HeNormal => dataset.write(&[H5Initializer { name: hdf5::types::VarLenUnicode::from_str("HeNormal").unwrap(), values: hdf5::types::VarLenArray::from_slice(&[0.]) }])?,
+            Initializer::HeUniform => dataset.write(&[H5Initializer { name: hdf5::types::VarLenUnicode::from_str("HeUniform").unwrap(), values: hdf5::types::VarLenArray::from_slice(&[0.]) }])?,
+            Initializer::LecunNormal => dataset.write(&[H5Initializer { name: hdf5::types::VarLenUnicode::from_str("LecunNormal").unwrap(), values: hdf5::typ

@@ -125,4 +125,10 @@ impl Initializer {
             Initializer::Normal => dataset.write(&[H5Initializer { name: hdf5::types::VarLenUnicode::from_str("Normal").unwrap(), values: hdf5::types::VarLenArray::from_slice(&[0.]) }])?,
             Initializer::NormalScaled(mean, std) => dataset.write(&[H5Initializer { name: hdf5::types::VarLenUnicode::from_str("NormalScaled").unwrap(), values: hdf5::types::VarLenArray::from_slice(&[*mean, *std]) }])?,
             Initializer::Ones => dataset.write(&[H5Initializer { name: hdf5::types::VarLenUnicode::from_str("Ones").unwrap(), values: hdf5::types::VarLenArray::from_slice(&[0.]) }])?,
-            Initializer::Uniform => dataset.write(&[H5Initializer { name: hdf5::types::VarLenUnicode::from_str("Uniform").unwrap(), valu
+            Initializer::Uniform => dataset.write(&[H5Initializer { name: hdf5::types::VarLenUnicode::from_str("Uniform").unwrap(), values: hdf5::types::VarLenArray::from_slice(&[0.]) }])?,
+            Initializer::UniformBounded(v1, v2) => dataset.write(&[H5Initializer { name: hdf5::types::VarLenUnicode::from_str("UniformBounded").unwrap(), values: hdf5::types::VarLenArray::from_slice(&[*v1, *v2]) }])?,
+            Initializer::Zeros => dataset.write(&[H5Initializer { name: hdf5::types::VarLenUnicode::from_str("Zeros").unwrap(), values: hdf5::types::VarLenArray::from_slice(&[0.]) }])?,
+        }
+        Ok(())
+    }
+}

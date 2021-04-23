@@ -29,4 +29,24 @@ pub(crate) fn create_group(file: &hdf5::File, group_name: &str) -> hdf5::Group {
 /// Vector containing the names of the subgroups, listed by creation order.
 pub(crate) fn list_subgroups(group: &hdf5::Group) -> Vec<String> {
     extern "C" fn members_callback(
-        _id: hdf5_sys::h5i::hid_t, name: *const std::os::raw::c_char, _info: *const hdf5_sys::h5l::H5L_info_t, op_data: 
+        _id: hdf5_sys::h5i::hid_t, name: *const std::os::raw::c_char, _info: *const hdf5_sys::h5l::H5L_info_t, op_data: *mut std::os::raw::c_void,
+    ) -> hdf5_sys::h5::herr_t {
+        let other_data: &mut Vec<String> = unsafe { &mut *(op_data as *mut Vec<String>) };
+        unsafe {
+            let name_str = CStr::from_ptr(name).to_str().unwrap().to_owned();
+            other_data.push(name_str);
+        }
+        0
+    }
+    let callback_fn: hdf5_sys::h5l::H5L_iterate_t = Some(members_callback);
+    let mut result: Vec<String> = Vec::new();
+    let other_data: *mut std::os::raw::c_void = &mut result as *mut _ as *mut std::os::raw::c_void;
+    let iteration_position: *mut hdf5_sys::h5::hsize_t = &mut { 0 as u64 };
+    unsafe {
+        hdf5_sys::h5l::H5Literate(group.id(), H5_INDEX_CRT_ORDER, H5_ITER_INC, iteration_position, callback_fn, other_data);
+    }
+    result
+}
+
+pub(crate) fn write_scalar<T: hdf5::H5Type>(dataset: &hdf5::Dataset, value: &T) {
+    let mem_dtype = hdf5::Datatype::from_type::<T>().expect("Could no

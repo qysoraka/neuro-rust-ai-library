@@ -49,4 +49,25 @@ pub(crate) fn list_subgroups(group: &hdf5::Group) -> Vec<String> {
 }
 
 pub(crate) fn write_scalar<T: hdf5::H5Type>(dataset: &hdf5::Dataset, value: &T) {
-    let mem_dtype = hdf5::Datatype::from_type::<T>().expect("Could no
+    let mem_dtype = hdf5::Datatype::from_type::<T>().expect("Could not determine the type of the scalar.");
+    let tmp = value as *const _;
+    unsafe { hdf5_sys::h5d::H5Dwrite(dataset.id(), mem_dtype.id(), hdf5_sys::h5s::H5S_ALL, hdf5_sys::h5s::H5S_ALL, hdf5_sys::h5p::H5P_DEFAULT, tmp as *const _); }
+}
+
+pub(crate) fn read_scalar<T: hdf5::H5Type>(dataset: &hdf5::Dataset) -> T {
+    let mem_dtype = hdf5::Datatype::from_type::<T>().expect("Could not determine the type of the scalar.");
+    let mut buffer = std::mem::MaybeUninit::<T>::uninit();
+    unsafe {
+        hdf5_sys::h5d::H5Dread(dataset.id(), mem_dtype.id(), hdf5_sys::h5s::H5S_ALL, hdf5_sys::h5s::H5S_ALL, hdf5_sys::h5p::H5P_DEFAULT, buffer.as_mut_ptr() as *mut _);
+        buffer.assume_init()
+    }
+}
+
+/// Saves a slice of tensors in an HDF5 group.
+///
+/// # Arguments
+///
+/// * `group` - The group where the vector is saved.
+/// * `slice` - A slice containing the tensors.
+/// * `name` - The name of the dataset where the vector is saved.
+pub(crate) fn save_vec_tensor(gro

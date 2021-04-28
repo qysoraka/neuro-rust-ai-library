@@ -70,4 +70,12 @@ pub(crate) fn read_scalar<T: hdf5::H5Type>(dataset: &hdf5::Dataset) -> T {
 /// * `group` - The group where the vector is saved.
 /// * `slice` - A slice containing the tensors.
 /// * `name` - The name of the dataset where the vector is saved.
-pub(crate) fn save_vec_tensor(gro
+pub(crate) fn save_vec_tensor(group: &hdf5::Group,
+                              slice: &[Tensor],
+                              name: &str
+) -> hdf5::Result<()> {
+    let values: Vec<H5Tensor> = slice.iter().map(H5Tensor::from).collect();
+    let ds = group.new_dataset::<H5Tensor>().create(name, slice.len())?;
+    ds.write(values.as_slice())?;
+    Ok(())
+}

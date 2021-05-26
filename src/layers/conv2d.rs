@@ -70,4 +70,27 @@ impl Conv2D {
     ///
     /// * `num_filters` - The number of filters in the layer.
     /// * `kernel_size` - The height and width of the convolution kernels.
-    /// * `stride` - The vertical and horizonta
+    /// * `stride` - The vertical and horizontal stride used for the convolution.
+    /// * `padding` - The padding used for the convolution. Must be a variant of Padding.
+    pub fn new(num_filters: u64,
+               kernel_size: (u64, u64),
+               stride: (u64, u64),
+               padding: Padding
+    ) -> Box<Conv2D> {
+        Box::new(Conv2D {
+            activation: Activation::ReLU,
+            kernel_size,
+            stride,
+            padding,
+            padding_size: (0, 0, 0, 0),
+            num_filters,
+            input_shape: Dim::new(&[0, 0, 0, 0]),
+            output_shape: Dim::new(&[0, 0, 0, 0]),
+            weights: Tensor::new_empty_tensor(),
+            biases: Tensor::new_empty_tensor(),
+            dweights: Tensor::new_empty_tensor(),
+            dbiases: Tensor::new_empty_tensor(),
+            linear_activation: None,
+            previous_activation: None,
+            reshaped_input: Tensor::new_empty_tensor(),
+       

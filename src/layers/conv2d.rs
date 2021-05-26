@@ -93,4 +93,23 @@ impl Conv2D {
             linear_activation: None,
             previous_activation: None,
             reshaped_input: Tensor::new_empty_tensor(),
-       
+            weights_initializer: Initializer::HeNormal,
+            biases_initializer: Initializer::Zeros,
+            regularizer: None,
+        })
+    }
+
+    /// Creates a 2D convolution layer with the given parameters.
+    ///
+    /// By default, the parameters of the kernels are initialized using a HeUniform initializer and the biases
+    /// of the layer a Zeros initializer.
+    ///
+    /// # Arguments
+    ///
+    /// * `num_filters` - The number of filters in the layer.
+    /// * `kernel_size` - The height and width of the convolution kernels.
+    /// * `stride` - The vertical and horizontal stride used for the convolution.
+    /// * `padding` - The padding used for the convolution. Must be a variant of Padding.
+    /// * `activation` - The activation function used by the layer.
+    /// * `weights_initializer` - The initializer used to initialize the weights of the layer.
+    /// * `

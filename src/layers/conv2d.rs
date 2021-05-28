@@ -112,4 +112,26 @@ impl Conv2D {
     /// * `padding` - The padding used for the convolution. Must be a variant of Padding.
     /// * `activation` - The activation function used by the layer.
     /// * `weights_initializer` - The initializer used to initialize the weights of the layer.
-    /// * `
+    /// * `biases_initializer` - The initializer used to initialize the biases of the layer.
+    pub fn with_param(num_filters: u64,
+                      kernel_size: (u64, u64),
+                      stride: (u64, u64),
+                      padding: Padding,
+                      activation: Activation,
+                      weights_initializer: Initializer,
+                      biases_initializer: Initializer
+    ) -> Box<Conv2D> {
+
+        Box::new(Conv2D {
+            activation,
+            kernel_size,
+            stride,
+            padding,
+            padding_size: (0, 0, 0, 0),
+            num_filters,
+            input_shape: Dim::new(&[0, 0, 0, 0]),
+            output_shape: Dim::new(&[0, 0, 0, 0]),
+            weights: Tensor::new_empty_tensor(),
+            biases: Tensor::new_empty_tensor(),
+            dweights: Tensor::new_empty_tensor(),
+            dbiases: Tensor::new_

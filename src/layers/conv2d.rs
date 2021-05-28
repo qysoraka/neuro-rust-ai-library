@@ -134,4 +134,19 @@ impl Conv2D {
             weights: Tensor::new_empty_tensor(),
             biases: Tensor::new_empty_tensor(),
             dweights: Tensor::new_empty_tensor(),
-            dbiases: Tensor::new_
+            dbiases: Tensor::new_empty_tensor(),
+            linear_activation: None,
+            previous_activation: None,
+            reshaped_input: Tensor::new_empty_tensor(),
+            weights_initializer,
+            biases_initializer,
+            regularizer: None,
+        })
+    }
+
+    pub(crate) fn from_hdf5_group(group: &hdf5::Group) -> Box<Conv2D> {
+        let activation = group.dataset("activation").and_then(|ds| ds.read_raw::<Activation>()).expect("Could not retrieve the activation function.");
+        let kernel_size = group.dataset("kernel_size").and_then(|ds| ds.read_raw::<[u64; 2]>()).expect("Could not retrieve the kernel size.");
+        let stride = group.dataset("stride").and_then(|ds| ds.read_raw::<[u64; 2]>()).expect("Could not retrieve the stride.");
+        let padding = group.dataset("padding").and_then(|ds| ds.read_raw::<Padding>()).expect("Could not retrieve the padding.");
+        let padding_size = group.dataset("padding_si

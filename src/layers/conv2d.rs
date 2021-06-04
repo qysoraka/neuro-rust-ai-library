@@ -149,4 +149,10 @@ impl Conv2D {
         let kernel_size = group.dataset("kernel_size").and_then(|ds| ds.read_raw::<[u64; 2]>()).expect("Could not retrieve the kernel size.");
         let stride = group.dataset("stride").and_then(|ds| ds.read_raw::<[u64; 2]>()).expect("Could not retrieve the stride.");
         let padding = group.dataset("padding").and_then(|ds| ds.read_raw::<Padding>()).expect("Could not retrieve the padding.");
-        let padding_size = group.dataset("padding_si
+        let padding_size = group.dataset("padding_size").and_then(|ds| ds.read_raw::<[u64; 4]>()).expect("Could not retrieve the pading size.");
+        let num_filters = group.dataset("num_filters").and_then(|ds| ds.read_raw::<u64>()).expect("Could not retrieve the number of filters.");
+        let input_shape = group.dataset("input_shape").and_then(|value| value.read_raw::<[u64; 4]>()).expect("Could not retrieve the input shape.");
+        let output_shape = group.dataset("output_shape").and_then(|value| value.read_raw::<[u64; 4]>()).expect("Could not retrieve the output shape.");
+        let weights = group.dataset("weights").and_then(|ds| ds.read_raw::<H5Tensor>()).expect("Could not retrieve the weights.");
+        let biases = group.dataset("biases").and_then(|ds| ds.read_raw::<H5Tensor>()).expect("Could not retrieve the biases.");
+        let weights_initializer = group.dataset("weights_initializer").and_then(|ds| ds.read_raw::<H5Initializer>(

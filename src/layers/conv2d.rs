@@ -155,4 +155,21 @@ impl Conv2D {
         let output_shape = group.dataset("output_shape").and_then(|value| value.read_raw::<[u64; 4]>()).expect("Could not retrieve the output shape.");
         let weights = group.dataset("weights").and_then(|ds| ds.read_raw::<H5Tensor>()).expect("Could not retrieve the weights.");
         let biases = group.dataset("biases").and_then(|ds| ds.read_raw::<H5Tensor>()).expect("Could not retrieve the biases.");
-        let weights_initializer = group.dataset("weights_initializer").and_then(|ds| ds.read_raw::<H5Initializer>(
+        let weights_initializer = group.dataset("weights_initializer").and_then(|ds| ds.read_raw::<H5Initializer>()).expect("Could not retrieve the weights initializer.");
+        let biases_initializer = group.dataset("biases_initializer").and_then(|ds| ds.read_raw::<H5Initializer>()).expect("Could not retrieve the biases initializer.");
+        let regularizer = Regularizer::from_hdf5_group(group);
+
+        Box::new(Conv2D {
+            activation: activation[0],
+            kernel_size: (kernel_size[0][0], kernel_size[0][1]),
+            stride: (stride[0][0], stride[0][1]),
+            padding: padding[0],
+            padding_size: (padding_size[0][0], padding_size[0][1], padding_size[0][2], padding_size[0][3]),
+            num_filters: num_filters[0],
+            input_shape: Dim::new(&input_shape[0]),
+            output_shape: Dim::new(&output_shape[0]),
+            weights: Tensor::from(&weights[0]),
+            biases: Tensor::from(&biases[0]),
+            dweights: Tensor::new_empty_tensor(),
+            dbiases: Tensor::new_empty_tensor(),
+            linear_activa

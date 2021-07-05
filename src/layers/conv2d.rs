@@ -172,4 +172,30 @@ impl Conv2D {
             biases: Tensor::from(&biases[0]),
             dweights: Tensor::new_empty_tensor(),
             dbiases: Tensor::new_empty_tensor(),
-            linear_activa
+            linear_activation: None,
+            previous_activation: None,
+            reshaped_input: Tensor::new_empty_tensor(),
+            weights_initializer: Initializer::from(&weights_initializer[0]),
+            biases_initializer: Initializer::from(&biases_initializer[0]),
+            regularizer,
+        })
+    }
+
+    /// Computes the convolution.
+    fn compute_convolution(&self, input: &Tensor) -> (Tensor, Tensor) {
+        let batch_size = input.dims().get()[3];
+
+        let h_out = self.output_shape.get()[0];
+        let w_out = self.output_shape.get()[1];
+
+        // Pad input if necessary
+        let padded = self.pad_input(&input);
+
+        // Transform input into column array
+        let input_values = match &padded {
+            Some(p) => self.img_to_col(&p),
+            None => self.img_to_col(input)
+        };
+
+        // Compute the convolution and add biases
+        let mut conv = add(&matmul(&self.weights, &input_values, MatProp::NONE

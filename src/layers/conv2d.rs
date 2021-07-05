@@ -198,4 +198,22 @@ impl Conv2D {
         };
 
         // Compute the convolution and add biases
-        let mut conv = add(&matmul(&self.weights, &input_values, MatProp::NONE
+        let mut conv = add(&matmul(&self.weights, &input_values, MatProp::NONE, MatProp::NONE), &self.biases, true);
+
+        // Reshape to have each mini-batch on the last dimension
+        conv = moddims(&conv, Dim4::new(&[self.num_filters, h_out * w_out, 1, batch_size]));
+
+        // Reshape to have correct output dimensions
+        let linear_activation = moddims(&transpose(&conv, false), Dim4::new(&[h_out, w_out, self.num_filters, batch_size]));
+        (linear_activation, input_values)
+    }
+
+    /// Computes the padding that must be added to the images.
+    fn compute_padding_size(&mut self, height: u64, width: u64, h_out: u64, w_out: u64) {
+        match self.padding {
+            Padding::Same => {
+                let pad_along_h = std::cmp::max((h_out - 1) * self.stride.0 + self.kernel_size.0 - height, 0);
+                let pad_along_w = std::cmp::max((w_out - 1) * self.stride.1 + self.kernel_size.1 - width, 0);
+                if pad_along_h != 0 {
+                    if pad_along_h % 2 == 0 {
+                        self.p

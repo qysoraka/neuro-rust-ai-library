@@ -216,4 +216,27 @@ impl Conv2D {
                 let pad_along_w = std::cmp::max((w_out - 1) * self.stride.1 + self.kernel_size.1 - width, 0);
                 if pad_along_h != 0 {
                     if pad_along_h % 2 == 0 {
-                        self.p
+                        self.padding_size.0 = pad_along_h / 2;
+                        self.padding_size.2 = pad_along_h / 2;
+                    } else {
+                        self.padding_size.0 = (pad_along_h - 1) / 2;
+                        self.padding_size.2 = (pad_along_h + 1) / 2;
+                    }
+                }
+                if pad_along_w != 0 {
+                    if pad_along_w % 2 == 0 {
+                        self.padding_size.1 = pad_along_w / 2;
+                        self.padding_size.3 = pad_along_w / 2;
+                    } else {
+                        self.padding_size.1 = (pad_along_w + 1) / 2;
+                        self.padding_size.3 = (pad_along_w - 1) / 2;
+                    }
+                }
+            },
+            Padding::Valid => {}
+        }
+    }
+
+    /// Applies the padding to the layer's inputs.
+    fn pad_input(&self, input: &Tensor) -> Option<Tensor> {
+       

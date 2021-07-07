@@ -239,4 +239,16 @@ impl Conv2D {
 
     /// Applies the padding to the layer's inputs.
     fn pad_input(&self, input: &Tensor) -> Option<Tensor> {
-       
+        let height = input.dims().get()[0];
+        let width = input.dims().get()[1];
+        let num_channels = input.dims().get()[2];
+        let mb_size = input.dims().get()[3];
+
+        // Create padded input
+        match self.padding {
+            Padding::Same => {
+                let pad_top = constant(0.0 as PrimitiveType, Dim4::new(&[self.padding_size.0, width, num_channels, mb_size]));
+                let pad_right = constant(0.0 as PrimitiveType, Dim4::new(&[height + self.padding_size.0, self.padding_size.1, num_channels, mb_size]));
+                let pad_bottom = constant(0.0 as PrimitiveType, Dim4::new(&[self.padding_size.2, width + self.padding_size.1, num_channels, mb_size]));
+                let pad_left = constant(0.0 as PrimitiveType, Dim4::new(&[height + self.padding_size.0 + self.padding_size.2, self.padding_size.3, num_channels, mb_size]));
+         

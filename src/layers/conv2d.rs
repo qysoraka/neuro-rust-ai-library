@@ -251,4 +251,24 @@ impl Conv2D {
                 let pad_right = constant(0.0 as PrimitiveType, Dim4::new(&[height + self.padding_size.0, self.padding_size.1, num_channels, mb_size]));
                 let pad_bottom = constant(0.0 as PrimitiveType, Dim4::new(&[self.padding_size.2, width + self.padding_size.1, num_channels, mb_size]));
                 let pad_left = constant(0.0 as PrimitiveType, Dim4::new(&[height + self.padding_size.0 + self.padding_size.2, self.padding_size.3, num_channels, mb_size]));
-         
+                let mut padded = join(0, &pad_top, input);
+                padded = join(1, &padded, &pad_right);
+                padded = join(0, &padded, &pad_bottom);
+                padded = join(1, &pad_left, &padded);
+                Some(padded)
+            },
+            Padding::Valid => {
+                None
+            }
+        }
+    }
+
+    /// Converts the image into a columns representation.
+    ///
+    /// This is done for computation speed but there is a memory cost.
+    fn img_to_col(&self, input: &Tensor) -> Tensor {
+        let num_channels = input.dims().get()[2];
+        let mut col = unwrap(input, self.kernel_size.0 as i64, self.kernel_size.1 as i64, self.stride.0 as i64, self.stride.1 as i64, 0, 0, true);
+        //col = reorder(&col, Dim4::new(&[0, 2, 1, 3]));
+        col = reorder_v2(&col, 0, 2, Some(vec![1, 3]));
+        moddims(&col, Dim4::new(&[col.dims().get()[0] * num_channels, col.elements() as u64/

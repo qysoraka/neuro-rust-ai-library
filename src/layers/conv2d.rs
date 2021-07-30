@@ -271,4 +271,20 @@ impl Conv2D {
         let mut col = unwrap(input, self.kernel_size.0 as i64, self.kernel_size.1 as i64, self.stride.0 as i64, self.stride.1 as i64, 0, 0, true);
         //col = reorder(&col, Dim4::new(&[0, 2, 1, 3]));
         col = reorder_v2(&col, 0, 2, Some(vec![1, 3]));
-        moddims(&col, Dim4::new(&[col.dims().get()[0] * num_channels, col.elements() as u64/
+        moddims(&col, Dim4::new(&[col.dims().get()[0] * num_channels, col.elements() as u64/(col.dims().get()[0] * num_channels), 1, 1]))
+    }
+
+    /// Transforms a columns representation of an image into an image with dimensions height x width x channels.
+    fn col_to_img(&self, input: &Tensor) -> Tensor {
+        let num_channels = self.input_shape.get()[2];
+        let h_out = self.output_shape.get()[0];
+        let w_out = self.output_shape.get()[1];
+        let num_cols = h_out * w_out;
+        let batch_size = input.dims().get()[1] / num_cols;
+        let height_padded = (h_out - 1) * self.stride.0 + self.kernel_size.0;
+        let width_padded = (w_out - 1) * self.stride.1 + self.kernel_size.1;
+
+        let mut img = moddims(&input, Dim4::new(&[input.dims().get()[0], h_out*w_out, 1, batch_size]));
+        //img = reorder(&img, Dim4::new(&[1, 0, 2, 3]));
+        img = reorder_v2(&img, 1, 0, Some(vec![2, 3]));
+        img = moddims(&img, Dim4::new(&[img.dims().get()[0], self.kernel_size.0 * self.kernel_size.1, num_channel

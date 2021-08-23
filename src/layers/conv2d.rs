@@ -287,4 +287,26 @@ impl Conv2D {
         let mut img = moddims(&input, Dim4::new(&[input.dims().get()[0], h_out*w_out, 1, batch_size]));
         //img = reorder(&img, Dim4::new(&[1, 0, 2, 3]));
         img = reorder_v2(&img, 1, 0, Some(vec![2, 3]));
-        img = moddims(&img, Dim4::new(&[img.dims().get()[0], self.kernel_size.0 * self.kernel_size.1, num_channel
+        img = moddims(&img, Dim4::new(&[img.dims().get()[0], self.kernel_size.0 * self.kernel_size.1, num_channels, batch_size]));
+        img = transpose(&img, false);
+        img = wrap(&img, height_padded as i64, width_padded as i64, self.kernel_size.0 as i64, self.kernel_size.1 as i64, self.stride.0 as i64, self.stride.1 as i64, 0, 0, true);
+
+        // Remove padding
+        index(&img, &[Seq::new(self.padding_size.0 as f32, (height_padded - self.padding_size.2 - 1) as f32, 1.0), Seq::new(self.padding_size.3 as f32, (width_padded - self.padding_size.1 - 1) as f32, 1.0), Seq::default(), Seq::default()])
+    }
+}
+
+impl Layer for Conv2D {
+    fn name(&self) -> &str {
+        Self::NAME
+    }
+
+    fn initialize_parameters(&mut self, input_shape: Dim4) {
+        let height = input_shape.get()[0];
+        let width = input_shape.get()[1];
+        let num_channels = input_shape.get()[2];
+
+        // Compute output dimensions and padding size
+        let (h_out, w_out) = match self.padding {
+            Padding::Same => {
+                ((height as f64 / self.stride.

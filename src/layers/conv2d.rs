@@ -309,4 +309,19 @@ impl Layer for Conv2D {
         // Compute output dimensions and padding size
         let (h_out, w_out) = match self.padding {
             Padding::Same => {
-                ((height as f64 / self.stride.
+                ((height as f64 / self.stride.0 as f64).ceil() as u64, (width as f64 / self.stride.1 as f64).ceil() as u64)
+            },
+            Padding::Valid => {
+                ((((height - self.kernel_size.0 + 1) as f64) / self.stride.0 as f64).ceil() as u64, (((width - self.kernel_size.1 + 1) as f64) / self.stride.1 as f64).ceil() as u64)
+            }
+        };
+        self.compute_padding_size(height, width, h_out, w_out);
+
+        let receptive_field = self.kernel_size.0 * self.kernel_size.1;
+        let fan_in = receptive_field * num_channels;
+        let fan_out = receptive_field * self.num_filters;
+        self.output_shape = Dim4::new(&[h_out, w_out, self.num_filters, 1]);
+        self.input_shape = input_shape;
+
+        // Initialize weights and biases
+        self.weights = self.weights_initializer.new_tensor(Dim4::new(&[self.num_filters, receptive_field * num_c

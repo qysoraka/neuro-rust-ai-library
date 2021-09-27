@@ -324,4 +324,25 @@ impl Layer for Conv2D {
         self.input_shape = input_shape;
 
         // Initialize weights and biases
-        self.weights = self.weights_initializer.new_tensor(Dim4::new(&[self.num_filters, receptive_field * num_c
+        self.weights = self.weights_initializer.new_tensor(Dim4::new(&[self.num_filters, receptive_field * num_channels, 1, 1]), fan_in, fan_out);
+        self.biases = self.biases_initializer.new_tensor(Dim4::new(&[self.num_filters, 1, 1, 1]), fan_in, fan_out);
+    }
+
+    fn compute_activation(&self, input: &Tensor) -> Tensor {
+        let (linear_activation, _) = self.compute_convolution(input);
+        linear_activation.eval();
+        let nonlinear_activation = self.activation.eval(&linear_activation);
+        nonlinear_activation.eval();
+        nonlinear_activation
+    }
+
+    fn compute_activation_mut(&mut self, input: &Tensor) -> Tensor {
+        let (linear_activation, reshaped_input) = self.compute_convolution(input);
+        linear_activation.eval();
+        reshaped_input.eval();
+        self.reshaped_input = reshaped_input;
+
+        let nonlinear_activation = self.activation.eval(&linear_activation);
+
+        self.linear_activation = Some(linear_activation);
+        self.previous_activation = Some(input

@@ -345,4 +345,21 @@ impl Layer for Conv2D {
         let nonlinear_activation = self.activation.eval(&linear_activation);
 
         self.linear_activation = Some(linear_activation);
-        self.previous_activation = Some(input
+        self.previous_activation = Some(input.copy());
+
+        nonlinear_activation
+    }
+
+
+    fn compute_dactivation_mut(&mut self, input: &Tensor) -> Tensor {
+        match &self.linear_activation {
+            Some(linear_activation) => {
+                let mut linear_activation_grad = mul(input, &self.activation.grad(linear_activation), true);
+                //linear_activation_grad = reorder(&linear_activation_grad, Dim4::new(&[2, 0, 1, 3]));
+                linear_activation_grad = reorder_v2(&linear_activation_grad, 2, 0, Some(vec![1, 3]));
+                linear_activation_grad = moddims(&linear_activation_grad, Dim4::new(&[self.num_filters, linear_activation_grad.elements() as u64 / self.num_filters, 1, 1]));
+
+                self.dbiases = sum(&linear_activation_grad, 1) / input.dims().get()[3];
+
+                let weights_grad = matmul(&linear_activation_grad, &self.reshaped_input, MatProp::NONE, MatProp::TRANS);
+                

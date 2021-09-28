@@ -388,4 +388,25 @@ impl Layer for Conv2D {
 
 
     fn save(&self, group: &hdf5::Group, layer_number: usize) -> Result<(), Error> {
-        let group_name = layer_number.to_string() + &String::from("_") + Self::NAM
+        let group_name = layer_number.to_string() + &String::from("_") + Self::NAME;
+        let conv2d = group.create_group(&group_name)?;
+
+        let activation = conv2d.new_dataset::<Activation>().create("activation", 1)?;
+        activation.write(&[self.activation])?;
+
+        let kernel_size = conv2d.new_dataset::<[u64; 2]>().create("kernel_size", 1)?;
+        kernel_size.write(&[[self.kernel_size.0, self.kernel_size.1]])?;
+
+        let stride = conv2d.new_dataset::<[u64; 2]>().create("stride", 1)?;
+        stride.write(&[[self.stride.0, self.stride.1]])?;
+
+        let padding = conv2d.new_dataset::<Padding>().create("padding", 1)?;
+        padding.write(&[self.padding])?;
+
+        let padding_size = conv2d.new_dataset::<[u64; 4]>().create("padding_size", 1)?;
+        padding_size.write(&[[self.padding_size.0, self.padding_size.1, self.padding_size.2, self.padding_size.3]])?;
+
+        let num_filters = conv2d.new_dataset::<u64>().create("num_filters", 1)?;
+        num_filters.write(&[self.num_filters])?;
+
+       

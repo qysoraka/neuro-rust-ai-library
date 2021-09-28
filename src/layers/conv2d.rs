@@ -362,4 +362,30 @@ impl Layer for Conv2D {
                 self.dbiases = sum(&linear_activation_grad, 1) / input.dims().get()[3];
 
                 let weights_grad = matmul(&linear_activation_grad, &self.reshaped_input, MatProp::NONE, MatProp::TRANS);
-                
+                self.dweights = weights_grad / input.dims().get()[3];
+                if let Some(regularizer) = self.regularizer {  self.dweights += regularizer.grad(&self.weights) }
+
+                let input_grad = matmul(&self.weights, &linear_activation_grad, MatProp::TRANS, MatProp::NONE);
+                self.col_to_img(&input_grad)
+            },
+            None => panic!("The linear activations have not been computed!"),
+        }
+    }
+
+    fn output_shape(&self) -> Dim4 {
+        self.output_shape
+    }
+
+
+    fn parameters(&self) -> Option<Vec<&Tensor>> {
+        Some(vec![&self.weights, &self.biases])
+    }
+
+
+    fn parameters_mut(&mut self) -> Option<(Vec<&mut Tensor>, Vec<&Tensor>)> {
+        Some((vec![&mut self.weights, &mut self.biases], vec![&self.dweights, &self.dbiases]))
+    }
+
+
+    fn save(&self, group: &hdf5::Group, layer_number: usize) -> Result<(), Error> {
+        let group_name = layer_number.to_string() + &String::from("_") + Self::NAM

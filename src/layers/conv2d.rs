@@ -409,4 +409,20 @@ impl Layer for Conv2D {
         let num_filters = conv2d.new_dataset::<u64>().create("num_filters", 1)?;
         num_filters.write(&[self.num_filters])?;
 
-       
+        let input_shape = conv2d.new_dataset::<[u64; 4]>().create("input_shape", 1)?;
+        input_shape.write(&[*self.input_shape.get()])?;
+
+        let output_shape = conv2d.new_dataset::<[u64; 4]>().create("output_shape", 1)?;
+        output_shape.write(&[*self.output_shape.get()])?;
+
+        let weights = conv2d.new_dataset::<H5Tensor>().create("weights", 1)?;
+        weights.write(&[ H5Tensor::from(&self.weights) ])?;
+
+        let biases = conv2d.new_dataset::<H5Tensor>().create("biases", 1)?;
+        biases.write(&[ H5Tensor::from(&self.biases) ])?;
+
+        let weights_initializer = conv2d.new_dataset::<H5Initializer>().create("weights_initializer", 1)?;
+        let biases_initializer = conv2d.new_dataset::<H5Initializer>().create("biases_initializer", 1)?;
+        self.weights_initializer.save(&weights_initializer)?;
+        self.biases_initializer.save(&biases_initializer)?;
+        if let Some(regularizer) = self.regul

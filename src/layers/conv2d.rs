@@ -425,4 +425,34 @@ impl Layer for Conv2D {
         let biases_initializer = conv2d.new_dataset::<H5Initializer>().create("biases_initializer", 1)?;
         self.weights_initializer.save(&weights_initializer)?;
         self.biases_initializer.save(&biases_initializer)?;
-        if let Some(regularizer) = self.regul
+        if let Some(regularizer) = self.regularizer { regularizer.save(&conv2d)?; }
+
+        Ok(())
+    }
+
+
+    fn set_regularizer(&mut self, regularizer: Option<Regularizer>) {
+        self.regularizer = regularizer;
+    }
+
+}
+
+impl fmt::Display for Conv2D {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let num_parameters = self.weights.elements() + self.biases.elements();
+        write!(f, "{} \t\t {} \t\t [{}, {}, {}]", Self::NAME, num_parameters, self.output_shape[0], self.output_shape[1], self.output_shape[2])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::layers::{Conv2D, Layer};
+    use crate::layers::Padding;
+    use crate::activations::Activation;
+    use crate::initializers::Initializer;
+    use crate::tensor::*;
+    use crate::assert_approx_eq;
+    use arrayfire::*;
+
+    fn create_test_layer() -> Conv2D {
+        let weights = transpose(&Tensor::new(&[1., 1., 1., 1., 2., 1., 1., 2., -1., -1., -1., -1., 1., 2., 1., 2., -2

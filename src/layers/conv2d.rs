@@ -455,4 +455,28 @@ mod tests {
     use arrayfire::*;
 
     fn create_test_layer() -> Conv2D {
-        let weights = transpose(&Tensor::new(&[1., 1., 1., 1., 2., 1., 1., 2., -1., -1., -1., -1., 1., 2., 1., 2., -2
+        let weights = transpose(&Tensor::new(&[1., 1., 1., 1., 2., 1., 1., 2., -1., -1., -1., -1., 1., 2., 1., 2., -2., -2., -2., -2., 1., 3., 3., 1.], Dim::new(&[12, 2, 1, 1])), false);
+        Conv2D {
+            activation: Activation::Linear,
+            kernel_size: (2, 2),
+            stride: (1, 1),
+            padding: Padding::Valid,
+            padding_size: (0, 0, 0, 0), // top, right, bottom, left
+            num_filters: 2,
+            input_shape: Dim::new(&[3, 3, 3, 1]),
+            output_shape: Dim::new(&[2, 2, 2, 1]),
+            weights,
+            biases: Tensor::new(&[0., 0.], Dim::new(&[2, 1, 1, 1])),
+            dweights: Tensor::new_empty_tensor(),
+            dbiases: Tensor::new_empty_tensor(),
+            linear_activation: None,
+            previous_activation: None,
+            reshaped_input: Tensor::new_empty_tensor(),
+            weights_initializer: Initializer::HeUniform,
+            biases_initializer: Initializer::Zeros,
+            regularizer: None,
+        }
+    }
+
+    fn create_test_images() -> Tensor {
+        let mut images_vec = (

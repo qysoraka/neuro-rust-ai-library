@@ -479,4 +479,26 @@ mod tests {
     }
 
     fn create_test_images() -> Tensor {
-        let mut images_vec = (
+        let mut images_vec = (1u8..=27 as u8).map(PrimitiveType::from).collect::<Vec<PrimitiveType>>();
+        let image2_vec: [PrimitiveType; 27] = [4., -1., 2., 2., -3., 1., 6., 9., -10., 7., 5., -3., 1., -2., 4., -12., -21., 1., 2., 9., 8., -4., -3., 7., 1., 1., -2.];
+        images_vec.extend(&image2_vec);
+        Tensor::new(&images_vec, Dim::new(&[3, 3, 3, 2]))
+    }
+
+    #[test]
+    fn test_conv2d_forward() {
+        let mut layer = create_test_layer();
+        let images = create_test_images();
+
+        let layer_output = layer.compute_activation_mut(&images);
+        let mut output: [PrimitiveType; 16] = [0.; 16];
+        layer_output.host(&mut output);
+        let expected_output: [PrimitiveType; 16] = [0., 6., 18., 24., 91., 97., 109., 115., 14., -9., -35., -25., -10., 25., 79., 43.];
+
+        assert_approx_eq!(output, expected_output);
+    }
+
+    #[test]
+    fn test_conv2d_input_gradient() {
+        let mut layer = create_test_layer();
+        let images = create

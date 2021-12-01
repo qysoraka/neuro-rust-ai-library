@@ -521,4 +521,19 @@ mod tests {
         let mut layer = create_test_layer();
         let images = create_test_images();
 
-     
+        let _ = layer.compute_activation_mut(&images);
+
+        let input_vec = [1., -4., -2., 1., -1., -3., 1., 2., -2., 1., 3., -1., 4., -1., 2., -4.];
+        let input = Tensor::new(&input_vec, Dim::new(&[2, 2, 2, 2]));
+
+        let _ = layer.compute_dactivation_mut(&input);
+        let dweights = layer.dweights;
+        let mut output: [PrimitiveType; 24] = [0.; 24];
+        dweights.host(&mut output);
+        // Filters are stored along the first dimension
+        // Input 1 individually
+        //let expected_output: [PrimitiveType; 24] = [-10., 7., -14., 6., -22., 4., -26., 3., -46., -2., -50., -3., -58., -5., -62., -6., -82., -11., -86., -12., -94., -14., -98., -15.];
+        // Input 2 individually
+        //let expected_output: [PrimitiveType; 24] = [0., 33., -6., -16., 2., -13., 44., 45., -4., 33., -23., 3., -19., 66., -56., -58., -4., 3., -26., -6., 7., -15., 18., -9.];
+        // Average of both
+        let expected_

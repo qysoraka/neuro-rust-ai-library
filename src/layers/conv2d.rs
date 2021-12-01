@@ -501,4 +501,24 @@ mod tests {
     #[test]
     fn test_conv2d_input_gradient() {
         let mut layer = create_test_layer();
-        let images = create
+        let images = create_test_images();
+
+        let _ = layer.compute_activation_mut(&images);
+
+        let input_vec = [1., -4., -2., 1., -1., -3., 1., 2., -2., 1., 3., -1., 4., -1., 2., -4.];
+        let input = Tensor::new(&input_vec, Dim::new(&[2, 2, 2, 2]));
+
+        let layer_output = layer.compute_dactivation_mut(&input);
+        let mut output: [PrimitiveType; 54] = [0.; 54];
+        layer_output.host(&mut output);
+        let expected_output: [PrimitiveType; 54] = [0., -8., -10., -1., -5., -5., -1., 3., 5., 4., 1., 2., -3., 0., -5., -4., -9., -2., -2., -3., -5., -1., -1., 6., 5., 8., 1., 2., 6., -1., 7., 8., -10., 5., 2., -9., -12., -6., 3., -8., -4., 11., -1., 9., 6., 6., 12., -4., 13., 2., -13., 3., -12., -3.];
+
+        assert_approx_eq!(output, expected_output);
+    }
+
+    #[test]
+    fn test_conv2d_weights_gradient() {
+        let mut layer = create_test_layer();
+        let images = create_test_images();
+
+     

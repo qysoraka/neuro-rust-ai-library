@@ -536,4 +536,27 @@ mod tests {
         // Input 2 individually
         //let expected_output: [PrimitiveType; 24] = [0., 33., -6., -16., 2., -13., 44., 45., -4., 33., -23., 3., -19., 66., -56., -58., -4., 3., -26., -6., 7., -15., 18., -9.];
         // Average of both
-        let expected_
+        let expected_output: [PrimitiveType; 24] = [-5., 20., -10., -5., -10., -4.5, 9., 24., -25., 15.5, -36.5, 0., -38.5, 30.5, -59., -32., -43., -4., -56., -9., -43.5, -14.5, -40., -12.];
+        assert_approx_eq!(output, expected_output);
+    }
+
+    #[test]
+    fn test_conv2d_biases_gradient() {
+        let mut layer = create_test_layer();
+        let images = create_test_images();
+
+        let _ = layer.compute_activation_mut(&images);
+
+        let input_vec = [1., -4., -2., 1., -1., -3., 1., 2., -2., 1., 3., -1., 4., -1., 2., -4.];
+        let input = Tensor::new(&input_vec, Dim::new(&[2, 2, 2, 2]));
+
+
+        let _ = layer.compute_dactivation_mut(&input);
+        let dbiases = layer.dbiases;
+        let mut output: [PrimitiveType; 2] = [0.; 2];
+        dbiases.host(&mut output);
+        let expected_output: [PrimitiveType; 2] = [-1.5, 0.];
+
+        assert_approx_eq!(output, expected_output);
+    }
+}

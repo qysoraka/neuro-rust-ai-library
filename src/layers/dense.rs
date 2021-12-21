@@ -60,4 +60,26 @@ impl Dense
     pub fn with_param(units: u64,
                       activation: Activation,
                       weights_initializer: Initializer,
-                      biase
+                      biases_initializer: Initializer
+    ) -> Box<Dense> {
+        Box::new(Dense {
+            units,
+            activation,
+            weights: Tensor::new_empty_tensor(),
+            dweights: Tensor::new_empty_tensor(),
+            biases: Tensor::new_empty_tensor(),
+            dbiases: Tensor::new_empty_tensor(),
+            input_shape: Dim::new(&[0, 0, 0, 0]),
+            output_shape: Dim::new(&[units, 1, 1, 1]),
+            linear_activation: None,
+            previous_input: None,
+            weights_initializer,
+            biases_initializer,
+            regularizer: None,
+        })
+    }
+
+    pub(crate) fn from_hdf5_group(group: &hdf5::Group) -> Box<Self> {
+        let _ = hdf5::silence_errors();
+        let units = group.dataset("units").and_then(|ds| ds.read_raw::<u64>()).expect("Could not retrieve the number of units.");
+        let activation: Vec<u8> = group.dataset("activation").and_then(|ds| ds.read_raw::<u8>()).expect("Could not ret

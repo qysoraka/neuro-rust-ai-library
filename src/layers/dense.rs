@@ -171,4 +171,25 @@ impl Layer for Dense
 
 
     fn parameters_mut(&mut self) -> Option<(Vec<&mut Tensor>, Vec<&Tensor>)> {
-        Some((vec![&mut self.weights, &mut self.biases], ve
+        Some((vec![&mut self.weights, &mut self.biases], vec![&self.dweights, &self.dbiases]))
+    }
+
+
+    fn save(&self, group: &hdf5::Group, layer_number: usize) -> Result<(), Error> {
+        let group_name = layer_number.to_string() + &String::from("_") + Self::NAME;
+        let dense = group.create_group(&group_name)?;
+
+        let units = dense.new_dataset::<u64>().create("units", 1)?;
+        units.write(&[self.units])?;
+
+        let activation = dense.new_dataset::<Activation>().create("activation", 1)?;
+        activation.write(&[self.activation])?;
+
+        let weights = dense.new_dataset::<H5Tensor>().create("weights", 1)?;
+        weights.write(&[H5Tensor::from(&self.weights)])?;
+
+        let biases = dense.new_dataset::<H5Tensor>().create("biases", 1)?;
+        biases.write(&[H5Tensor::from(&self.biases)])?;
+
+        let input_shape = dense.new_dataset::<[u64; 4]>().create("input_shape", 1)?;
+        input_shape.write(&[*self.input_shape

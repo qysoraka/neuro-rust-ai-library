@@ -82,4 +82,11 @@ impl Dense
     pub(crate) fn from_hdf5_group(group: &hdf5::Group) -> Box<Self> {
         let _ = hdf5::silence_errors();
         let units = group.dataset("units").and_then(|ds| ds.read_raw::<u64>()).expect("Could not retrieve the number of units.");
-        let activation: Vec<u8> = group.dataset("activation").and_then(|ds| ds.read_raw::<u8>()).expect("Could not ret
+        let activation: Vec<u8> = group.dataset("activation").and_then(|ds| ds.read_raw::<u8>()).expect("Could not retrieve the activation.");
+        let weights = group.dataset("weights").and_then(|ds| ds.read_raw::<H5Tensor>()).expect("Could not retrieve the weights.");
+        let biases = group.dataset("biases").and_then(|ds| ds.read_raw::<H5Tensor>()).expect("Could not retrieve the biases.");
+        let input_shape = group.dataset("input_shape").and_then(|ds| ds.read_raw::<[u64; 4]>()).expect("Could not retrieve the input shape.");
+        let output_shape = group.dataset("output_shape").and_then(|ds| ds.read_raw::<[u64; 4]>()).expect("Could not retrieve the output shape.");
+        let regularizer = Regularizer::from_hdf5_group(group);
+        let weights_initializer = group.dataset("weights_initializer").and_then(|ds| ds.read_raw::<H5Initializer>()).expect("Could not retrieve the weights initializer.");
+        let biases_initializer = group.dataset("biases_initializer").and_then(|ds| ds.read_raw::<H5Initializer>()).expect("Could not retrieve the

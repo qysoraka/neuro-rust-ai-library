@@ -149,4 +149,26 @@ impl Layer for Dense
                     Some(previous_input) => {
                         self.dweights = matmul(&linear_activation_grad, previous_input, MatProp::NONE, MatProp::TRANS).reduce(Reduction::MeanBatches);
                         if let Some(regularizer) = self.regularizer { self.dweights += regularizer.grad(&self.weights) }
-                        self.dbiase
+                        self.dbiases = linear_activation_grad.reduce(Reduction::MeanBatches);
+                    },
+                    None => panic!("The previous activations have not been computed!"),
+                }
+                //matmul(&self.weights, &linear_activation_grad, MatProp::TRANS, MatProp::NONE).reshape(Dim4::new(&[self.input_shape[0], self.input_shape[1], self.input_shape[2], input.batch_size()]))
+                matmul(&self.weights, &linear_activation_grad, MatProp::TRANS, MatProp::NONE)
+            },
+            None => panic!("The linear activations z have not been computed!"),
+        }
+    }
+
+    fn output_shape(&self) -> Dim4 {
+        self.output_shape
+    }
+
+
+    fn parameters(&self) -> Option<Vec<&Tensor>> {
+        Some(vec![&self.weights, &self.biases])
+    }
+
+
+    fn parameters_mut(&mut self) -> Option<(Vec<&mut Tensor>, Vec<&Tensor>)> {
+        Some((vec![&mut self.weights, &mut self.biases], ve

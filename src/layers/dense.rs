@@ -217,4 +217,29 @@ impl Layer for Dense
 
 impl fmt::Display for Dense {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} \t\t {} \t\t [{}, {}, {}]", Self::N
+        write!(f, "{} \t\t {} \t\t [{}, {}, {}]", Self::NAME, self.weights.elements() + self.biases.elements(), self.output_shape[0], self.output_shape[1], self.output_shape[2])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::layers::{Dense, Layer};
+    use crate::activations::Activation;
+    use crate::initializers::Initializer;
+    use crate::tensor::*;
+    use crate::assert_approx_eq;
+    use arrayfire::*;
+
+    fn create_test_layer() -> Dense {
+        let weights = [1., -2., 5., 3., -7., 0.];
+        let biases = [2., -1.];
+        Dense {
+            units: 2,
+            activation: Activation::Linear,
+            weights: Tensor::new(&weights, Dim::new(&[2, 3, 1, 1])),
+            dweights: Tensor::new_empty_tensor(),
+            biases: Tensor::new(&biases, Dim::new(&[2, 1, 1, 1])),
+            dbiases: Tensor::new_empty_tensor(),
+            input_shape: Dim::new(&[3, 1, 1, 1]),
+            output_shape: Dim::new(&[2, 1, 1, 1]),
+            linear_activa

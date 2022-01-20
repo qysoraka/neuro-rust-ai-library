@@ -192,4 +192,29 @@ impl Layer for Dense
         biases.write(&[H5Tensor::from(&self.biases)])?;
 
         let input_shape = dense.new_dataset::<[u64; 4]>().create("input_shape", 1)?;
-        input_shape.write(&[*self.input_shape
+        input_shape.write(&[*self.input_shape.get()])?;
+
+        let output_shape = dense.new_dataset::<[u64; 4]>().create("output_shape", 1)?;
+        output_shape.write(&[*self.output_shape.get()])?;
+
+        let weights_initializer = dense.new_dataset::<H5Initializer>().create("weights_initializer", 1)?;
+        self.weights_initializer.save(&weights_initializer)?;
+
+        let biases_initializer = dense.new_dataset::<H5Initializer>().create("biases_initializer", 1)?;
+        self.biases_initializer.save(&biases_initializer)?;
+
+        Ok(())
+    }
+
+    fn set_regularizer(&mut self, regularizer: Option<Regularizer>) {
+        self.regularizer = regularizer;
+    }
+
+    fn print(&self) {
+        println!("Number of parameters: {}", self.weights.elements() + self.biases.elements());
+    }
+}
+
+impl fmt::Display for Dense {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} \t\t {} \t\t [{}, {}, {}]", Self::N

@@ -89,4 +89,31 @@ impl Dense
         let output_shape = group.dataset("output_shape").and_then(|ds| ds.read_raw::<[u64; 4]>()).expect("Could not retrieve the output shape.");
         let regularizer = Regularizer::from_hdf5_group(group);
         let weights_initializer = group.dataset("weights_initializer").and_then(|ds| ds.read_raw::<H5Initializer>()).expect("Could not retrieve the weights initializer.");
-        let biases_initializer = group.dataset("biases_initializer").and_then(|ds| ds.read_raw::<H5Initializer>()).expect("Could not retrieve the
+        let biases_initializer = group.dataset("biases_initializer").and_then(|ds| ds.read_raw::<H5Initializer>()).expect("Could not retrieve the biases initializer.");
+
+        Box::new(Self {
+            units: units[0],
+            activation: activation[0].try_into().expect("Could not create activation variant."),
+            weights: Tensor::from(&weights[0]),
+            dweights: Tensor::new_empty_tensor(),
+            biases: Tensor::from(&biases[0]),
+            dbiases: Tensor::new_empty_tensor(),
+            input_shape: Dim::new(&(input_shape[0])),
+            output_shape: Dim::new(&(output_shape[0])),
+            linear_activation: None,
+            previous_input: None,
+            weights_initializer: Initializer::from(&weights_initializer[0]),
+            biases_initializer: Initializer::from(&biases_initializer[0]),
+            regularizer,
+        })
+    }
+}
+
+impl Layer for Dense
+{
+    fn name(&self) -> &str {
+        Self::NAME
+    }
+
+    fn initialize_parameters(&mut self, input_shape: Dim) {
+    

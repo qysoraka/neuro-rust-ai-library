@@ -242,4 +242,32 @@ mod tests {
             dbiases: Tensor::new_empty_tensor(),
             input_shape: Dim::new(&[3, 1, 1, 1]),
             output_shape: Dim::new(&[2, 1, 1, 1]),
-            linear_activa
+            linear_activation: None,
+            previous_input: None,
+            weights_initializer: Initializer::HeUniform,
+            biases_initializer: Initializer::Zeros,
+            regularizer: None,
+        }
+    }
+
+    #[test]
+    fn test_dense_forward() {
+        let mut layer = create_test_layer();
+
+        let input = Tensor::new(&[-2., 1., 4., 3., -1., 2.], Dim::new(&[3, 1, 1, 2]));
+        let layer_output = layer.compute_activation_mut(&input);
+        let mut output: [PrimitiveType; 4] = [0.; 4];
+        layer_output.host(&mut output);
+        let expected_output: [PrimitiveType; 4] = [-23., 6., -14., -10.];
+
+        assert_approx_eq!(output, expected_output);
+    }
+
+    #[test]
+    fn test_dense_input_gradient() {
+        let mut layer = create_test_layer();
+
+        let input_forward = Tensor::new(&[-2., 1., 4., 3., -1., 2.], Dim::new(&[3, 1, 1, 2]));
+        let _ = layer.compute_activation_mut(&input_forward);
+
+       

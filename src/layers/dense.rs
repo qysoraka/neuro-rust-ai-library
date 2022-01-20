@@ -116,4 +116,18 @@ impl Layer for Dense
     }
 
     fn initialize_parameters(&mut self, input_shape: Dim) {
-    
+        let fan_in = input_shape.get()[0] * input_shape.get()[1] * input_shape.get()[2];
+        let fan_out = self.units;
+        self.weights = self.weights_initializer.new_tensor(Dim::new(&[fan_out, fan_in, 1, 1]), fan_in, fan_out);
+        self.biases = self.biases_initializer.new_tensor(Dim::new(&[fan_out, 1, 1, 1]), fan_in, fan_out);
+        self.input_shape = input_shape;
+    }
+
+    fn compute_activation(&self, input: &Tensor) -> Tensor {
+        let linear_activation = add(&matmul(&self.weights, &input, MatProp::NONE, MatProp::NONE), &self.biases, true);
+        self.activation.eval(&linear_activation)
+    }
+
+    fn compute_activation_mut(&mut self, input: &Tensor) -> Tensor {
+        let linear_activation = add(&matmul(&self.weights, input, MatProp::NONE, MatProp::NONE), &self.biases, true);
+        let nonlinear_activation = self.activation.eval

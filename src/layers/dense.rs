@@ -130,4 +130,23 @@ impl Layer for Dense
 
     fn compute_activation_mut(&mut self, input: &Tensor) -> Tensor {
         let linear_activation = add(&matmul(&self.weights, input, MatProp::NONE, MatProp::NONE), &self.biases, true);
-        let nonlinear_activation = self.activation.eval
+        let nonlinear_activation = self.activation.eval(&linear_activation);
+
+        // Save input and linear activation for efficient backprop
+        self.previous_input = Some(input.clone());
+        self.linear_activation = Some(linear_activation);
+
+        // Return the non linear activation
+        nonlinear_activation
+    }
+
+
+    fn compute_dactivation_mut(&mut self, input: &Tensor) -> Tensor {
+        match &self.linear_activation {
+            Some(linear_activation) => {
+                let linear_activation_grad = mul(input, &self.activation.grad(linear_activation), true);
+                match &mut self.previous_input {
+                    Some(previous_input) => {
+                        self.dweights = matmul(&linear_activation_grad, previous_input, MatProp::NONE, MatProp::TRANS).reduce(Reduction::MeanBatches);
+                        if let Some(regularizer) = self.regularizer { self.dweights += regularizer.grad(&self.weights) }
+                        self.dbiase

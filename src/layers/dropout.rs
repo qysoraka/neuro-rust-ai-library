@@ -118,4 +118,14 @@ impl Layer for Dropout {
         write_scalar(&drop_rate, &self.drop_rate);
 
         let output_shape = dropout.new_dataset::<[u64; 4]>().create("output_shape", 1)?;
-        output_shape.write(&[*self.output_sha
+        output_shape.write(&[*self.output_shape.get()])?;
+
+        Ok(())
+    }
+}
+
+impl fmt::Display for Dropout {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} \t 0  \t\t [{}, {}, {}]", Self::NAME, self.output_shape[0], self.output_shape[1], self.output_shape[2])
+    }
+}

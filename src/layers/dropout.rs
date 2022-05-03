@@ -93,4 +93,29 @@ impl Layer for Dropout {
     }
 
     fn compute_activation_mut(&mut self, prev_activation: &Tensor) -> Tensor {
-        let mask = self.gener
+        let mask = self.generate_binomial_mask(prev_activation.dims());
+        let output = prev_activation * &mask;
+        self.grad = mask;
+
+        // Inverted dropout
+        &output * self.scaling_factor
+    }
+
+    fn compute_dactivation_mut(&mut self, dz: &Tensor) -> Tensor {
+        &self.grad * dz * self.scaling_factor
+    }
+
+    fn output_shape(&self) -> Dim4 {
+        self.output_shape
+    }
+
+
+    fn save(&self, group: &hdf5::Group, layer_number: usize) -> Result<(), Error> {
+        let group_name = layer_number.to_string() + &String::from("_") + Self::NAME;
+        let dropout = group.create_group(&group_name)?;
+
+        let drop_rate = dropout.new_dataset::<f64>().create("drop_rate", 1)?;
+        write_scalar(&drop_rate, &self.drop_rate);
+
+        let output_shape = dropout.new_dataset::<[u64; 4]>().create("output_shape", 1)?;
+        output_shape.write(&[*self.output_sha

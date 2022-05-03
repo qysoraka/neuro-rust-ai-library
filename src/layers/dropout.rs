@@ -40,4 +40,25 @@ impl Dropout {
         let seed: u64 = rng.gen();
         let random_engine = RandomEngine::new(RandomEngineType::PHILOX_4X32_10, Some(seed));
 
-        let scaling_factor = 1. / (1. - drop_rat
+        let scaling_factor = 1. / (1. - drop_rate) as PrimitiveType;
+
+        Box::new(Dropout {
+            drop_rate,
+            output_shape: Dim4::new(&[0, 0, 0, 0]),
+            grad: Tensor::new_empty_tensor(),
+            random_engine,
+            scaling_factor,
+        })
+    }
+
+    /// Generates a binomial mask to let some values pass through the layer.
+    fn generate_binomial_mask(&self, dims: Dim4) -> Tensor {
+        let random_values = random_uniform::<f64>(dims, &self.random_engine);
+        let cond = gt(&random_values, &self.drop_rate, true);
+        cond.cast()
+    }
+
+    pub(crate) fn from_hdf5_group(group: &hdf5::Group) -> Box<Self> {
+        let _ = hdf5::silence_errors();
+        let drop_rate = group.dataset("drop_rate").and_then(|ds| Ok(read_scalar::<f64>(&ds))).expect("Could not retrieve the drop rate.");
+        let output_shape = group.dataset("output_shape").and_then(|value| value.read_raw::<[u64; 4

@@ -293,4 +293,25 @@ mod tests {
         let dweights = layer.dweights;
         let mut output: [PrimitiveType; 6] = [0.; 6];
         dweights.host(&mut output);
-        let expected_ou
+        let expected_output: [PrimitiveType; 6] = [-2.5, 6.5, 1., -2.5, 1., -1.];
+
+        assert_approx_eq!(output, expected_output);
+    }
+
+    #[test]
+    fn test_dense_biases_gradient() {
+        let mut layer = create_test_layer();
+        let input_forward = Tensor::new(&[-2., 1., 4., 3., -1., 2.], Dim::new(&[3, 1, 1, 2]));
+        let _ = layer.compute_activation_mut(&input_forward);
+
+        let input_backward = Tensor::new(&[1., -2., -1., 3.], Dim::new(&[2, 1, 1, 2]));
+
+        let _ = layer.compute_dactivation_mut(&input_backward);
+        let dbiases = layer.dbiases;
+        let mut output: [PrimitiveType; 2] = [0.; 2];
+        dbiases.host(&mut output);
+        let expected_output: [PrimitiveType; 2] = [0., 0.5];
+
+        assert_approx_eq!(output, expected_output);
+    }
+}

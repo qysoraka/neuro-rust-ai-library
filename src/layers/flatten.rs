@@ -22,4 +22,33 @@ impl Flatten {
 
     pub(crate) fn from_hdf5_group(group: &hdf5::Group) -> Box<Flatten> {
         let input_shape = group.dataset("input_shape").and_then(|ds| ds.read_raw::<[u64; 4]>()).expect("Could not retrieve the input shape.");
-        let output_shape = group.dat
+        let output_shape = group.dataset("output_shape").and_then(|ds| ds.read_raw::<[u64; 4]>()).expect("Could not retrieve the output shape.");
+
+        Box::new(Flatten {
+            input_shape: Dim::new(&input_shape[0]),
+            output_shape: Dim::new(&output_shape[0]),
+        })
+    }
+
+}
+
+impl Layer for Flatten {
+    fn name(&self) -> &str {
+        Self::NAME
+    }
+
+    fn initialize_parameters(&mut self, input_shape: Dim) {
+        self.input_shape = input_shape;
+        self.output_shape = Dim::new(&[input_shape.get()[0] * input_shape.get()[1] * input_shape.get()[2], 1, 1, 1]);
+    }
+
+    fn compute_activation(&self, input: &Tensor) -> Tensor {
+        input.flatten()
+    }
+
+    fn compute_activation_mut(&mut self, input: &Tensor) -> Tensor {
+        input.flatten()
+    }
+
+    fn compute_dactivation_mut(&mut self, input: &Tensor) -> Tensor {
+        input.reshape(Dim::new(&[self.input_shape.get()[0], self.input_shape.get()[1], self.input_shape.get()[2], input.d

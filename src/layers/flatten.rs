@@ -51,4 +51,29 @@ impl Layer for Flatten {
     }
 
     fn compute_dactivation_mut(&mut self, input: &Tensor) -> Tensor {
-        input.reshape(Dim::new(&[self.input_shape.get()[0], self.input_shape.get()[1], self.input_shape.get()[2], input.d
+        input.reshape(Dim::new(&[self.input_shape.get()[0], self.input_shape.get()[1], self.input_shape.get()[2], input.dims().get()[3]]))
+    }
+
+    fn output_shape(&self) -> Dim {
+        self.output_shape
+    }
+
+    fn save(&self, group: &Group, layer_number: usize) -> Result<(), Error> {
+        let group_name = layer_number.to_string() + &String::from("_") + Self::NAME;
+        let flatten = group.create_group(&group_name)?;
+
+        let input_shape = flatten.new_dataset::<[u64; 4]>().create("input_shape", 1)?;
+        input_shape.write(&[*self.input_shape.get()])?;
+
+        let output_shape = flatten.new_dataset::<[u64; 4]>().create("output_shape", 1)?;
+        output_shape.write(&[*self.output_shape.get()])?;
+
+        Ok(())
+    }
+}
+
+impl fmt::Display for Flatten {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} \t 0 \t\t [{}, {}, {}]", Self::NAME, self.output_shape[0], self.output_shape[1], self.output_shape[2])
+    }
+}

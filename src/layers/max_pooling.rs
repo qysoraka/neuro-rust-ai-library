@@ -35,4 +35,28 @@ impl MaxPool2D {
             output_shape: Dim::new(&[0, 0, 0, 0]),
             row_indices: Array::new(&[0], Dim4::new(&[1, 1, 1, 1])),
             col_indices: Array::new(&[0], Dim4::new(&[1, 1, 1, 1])),
- 
+        })
+    }
+
+
+    /// Creates a 2D max pooling layer with the specified parameters.
+    ///
+    /// # Arguments
+    ///
+    /// * `pool_size` - The height and width of the moving window.
+    /// * `stride` - The vertical and horizontal stride.
+    pub fn with_param(pool_size: (u64, u64), stride: (u64, u64)) -> Box<MaxPool2D> {
+        Box::new(MaxPool2D {
+            pool_size,
+            stride,
+            input_shape: Dim::new(&[0, 0, 0, 0]),
+            output_shape: Dim::new(&[0, 0, 0, 0]),
+            row_indices: Array::new(&[0], Dim4::new(&[1, 1, 1, 1])),
+            col_indices: Array::new(&[0], Dim4::new(&[1, 1, 1, 1])),
+        })
+    }
+
+    /// Creates a MaxPool2D layer from an HDF5 group.
+    pub(crate) fn from_hdf5_group(group: &hdf5::Group) -> Box<MaxPool2D> {
+        let pool_size = group.dataset("pool_size").and_then(|ds| ds.read_raw::<[u64; 2]>()).expect("Could not retrieve the pool size.");
+        let stride = group.d

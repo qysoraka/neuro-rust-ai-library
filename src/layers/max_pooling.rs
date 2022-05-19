@@ -59,4 +59,20 @@ impl MaxPool2D {
     /// Creates a MaxPool2D layer from an HDF5 group.
     pub(crate) fn from_hdf5_group(group: &hdf5::Group) -> Box<MaxPool2D> {
         let pool_size = group.dataset("pool_size").and_then(|ds| ds.read_raw::<[u64; 2]>()).expect("Could not retrieve the pool size.");
-        let stride = group.d
+        let stride = group.dataset("stride").and_then(|ds| ds.read_raw::<[u64; 2]>()).expect("Could not retrieve the stride.");
+        let input_shape = group.dataset("input_shape").and_then(|ds| ds.read_raw::<[u64; 4]>()).expect("Could not retrieve the input shape.");
+        let output_shape = group.dataset("output_shape").and_then(|ds| ds.read_raw::<[u64; 4]>()).expect("Could not retrieve the output shape.");
+
+        Box::new(MaxPool2D {
+            pool_size: (pool_size[0][0], pool_size[0][1]),
+            stride: (stride[0][0], stride[0][1]),
+            input_shape: Dim::new(&input_shape[0]),
+            output_shape: Dim::new(&output_shape[0]),
+            row_indices: Array::new(&[0], Dim4::new(&[1, 1, 1, 1])),
+            col_indices: Array::new(&[0], Dim4::new(&[1, 1, 1, 1])),
+        })
+    }
+
+    /// Computes the maximum value in the pooling window.
+    fn max_pool(&self, input: &Tensor) -> (Tensor, Array<i32>, Array<i32>) {
+        let

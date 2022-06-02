@@ -75,4 +75,20 @@ impl MaxPool2D {
 
     /// Computes the maximum value in the pooling window.
     fn max_pool(&self, input: &Tensor) -> (Tensor, Array<i32>, Array<i32>) {
-        let
+        let cols = unwrap(input, self.pool_size.0 as i64, self.pool_size.1 as i64, self.stride.0 as i64, self.stride.1 as i64, 0, 0, true);
+        let cols_reshaped = moddims(&cols, Dim4::new(&[cols.dims().get()[0], cols.elements() as u64 / cols.dims().get()[0], 1, 1]));
+
+        // Computes max values and indices
+        let (mut max_values, row_indices_u32) = imax(&cols_reshaped, 0);
+
+        // Creates the output
+        let output = moddims(&max_values, Dim4::new(&[self.output_shape.get()[0], self.output_shape.get()[1], input.dims().get()[2], input.dims().get()[3]]));
+
+        // Creates rows and columns indices
+        let mut row_indices: Array<i32> = row_indices_u32.cast();
+        //row_indices = reorder(&row_indices, Dim4::new(&[1, 0, 2, 3]));
+        row_indices = reorder_v2(&row_indices, 1, 0, Some(vec![2, 3]));
+
+        //max_values = reorder(&max_values, Dim4::new(&[1, 0, 2, 3]));
+        max_values = reorder_v2(&max_values, 1, 0, Some(vec![2, 3]));
+  

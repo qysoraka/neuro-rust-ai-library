@@ -109,4 +109,26 @@ impl Layer for MaxPool2D {
         let output_height = ((input_shape.get()[0] - self.pool_size.0) as f64 / self.stride.0 as f64 + 1.).floor() as u64;
         let output_width = ((input_shape.get()[1] - self.pool_size.1) as f64 / self.stride.1 as f64 + 1.).floor() as u64;
         self.input_shape = input_shape;
-        self.output_shape = Dim4::new(&[output_height, output_width, input_shape.get()[2], input_
+        self.output_shape = Dim4::new(&[output_height, output_width, input_shape.get()[2], input_shape.get()[3]]);
+    }
+
+    fn compute_activation(&self, input: &Tensor) -> Tensor {
+        let (output, _, _) = self.max_pool(input);
+        output
+    }
+
+    fn compute_activation_mut(&mut self, input: &Tensor) -> Tensor {
+        let (output, row_indices, col_indices) = self.max_pool(input);
+        self.row_indices = row_indices;
+        self.col_indices = col_indices;
+        output
+    }
+
+    fn compute_dactivation_mut(&mut self, input: &Tensor) -> Tensor {
+        let batch_size = input.dims().get()[3];
+        let flat_input = flat(input);
+        let sparse = sparse(self.pool_size.0 * self.pool_size.1, input.elements() as u64, &flat_input, &self.row_indices, &self.col_indices, SparseFormat::COO);
+        let mut dense = sparse_to_dense(&sparse);
+        let num_channels = self.input_shape.get()[2];
+        let num_cols = dense.dims().get()[1] / (num_channels * batch_size);
+        dense = moddims(&dense, Di

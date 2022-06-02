@@ -91,4 +91,22 @@ impl MaxPool2D {
 
         //max_values = reorder(&max_values, Dim4::new(&[1, 0, 2, 3]));
         max_values = reorder_v2(&max_values, 1, 0, Some(vec![2, 3]));
-  
+        let num_cols = max_values.dims().get()[0];
+        let col_indices_vec: Vec<i32> = (0..num_cols as i32).collect();
+        let mut col_indices = Array::new(&col_indices_vec[..], Dim4::new(&[num_cols, 1, 1, 1]));
+        col_indices = tile(&col_indices, Dim4::new(&[cols_reshaped.dims().get()[2] * cols_reshaped.dims().get()[3], 1, 1, 1]));
+
+        (output, row_indices, col_indices)
+    }
+}
+
+impl Layer for MaxPool2D {
+    fn name(&self) -> &str {
+        Self::NAME
+    }
+
+    fn initialize_parameters(&mut self, input_shape: Dim4) {
+        let output_height = ((input_shape.get()[0] - self.pool_size.0) as f64 / self.stride.0 as f64 + 1.).floor() as u64;
+        let output_width = ((input_shape.get()[1] - self.pool_size.1) as f64 / self.stride.1 as f64 + 1.).floor() as u64;
+        self.input_shape = input_shape;
+        self.output_shape = Dim4::new(&[output_height, output_width, input_shape.get()[2], input_

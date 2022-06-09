@@ -131,4 +131,23 @@ impl Layer for MaxPool2D {
         let mut dense = sparse_to_dense(&sparse);
         let num_channels = self.input_shape.get()[2];
         let num_cols = dense.dims().get()[1] / (num_channels * batch_size);
-        dense = moddims(&dense, Di
+        dense = moddims(&dense, Dim4::new(&[dense.dims().get()[0], num_cols, num_channels, batch_size]));
+        wrap(&dense, self.input_shape.get()[0] as i64, self.input_shape.get()[1] as i64, self.pool_size.0 as i64, self.pool_size.1 as i64, self.stride.0 as i64, self.stride.1 as i64, 0, 0, true)
+    }
+
+    fn output_shape(&self) -> Dim {
+        self.output_shape
+    }
+
+
+    fn save(&self, group: &hdf5::Group, layer_number: usize) -> Result<(), Error> {
+        let group_name = layer_number.to_string() + &String::from("_") + Self::NAME;
+        let max_pool = group.create_group(&group_name)?;
+
+        let pool_size = max_pool.new_dataset::<[u64; 2]>().create("pool_size", 1)?;
+        pool_size.write(&[[self.pool_size.0, self.pool_size.1]])?;
+
+        let stride = max_pool.new_dataset::<[u64; 2]>().create("stride", 1)?;
+        stride.write(&[[self.stride.0, self.stride.1]])?;
+
+        let input_shape = max_pool

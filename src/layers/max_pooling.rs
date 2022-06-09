@@ -181,4 +181,22 @@ mod tests {
             stride: (2, 2),
             input_shape: Dim::new(&[4, 4, 2, 1]),
             output_shape: Dim::new(&[2, 2, 2, 1]),
-            row_indices: Array::new(&[0], Dim4::new(
+            row_indices: Array::new(&[0], Dim4::new(&[1, 1, 1, 1])),
+            col_indices: Array::new(&[0], Dim4::new(&[1, 1, 1, 1])),
+        }
+    }
+
+    #[test]
+    fn test_maxpool2d_forward() {
+        // Generate array of dimension [3 4 1 2]
+        let input_val = [3., -1., -8., 2., 5., -4., 1., 7., 0., 3., 1., 1., -2., 6., 8., -5., -1., 8., 3., -4., 5., 6., -2., 0., -1., -3., -8., 4., 2., 9., -1., 5., 6., -1., 0., 1., 4., -2., -3., 1., 5., 8., -2., 6., 5., 3., 1., -4., 2., 9., -7., 5., 1., 4., 0., 3., -2., -6., 1., 8., -7., 2., -3., -1.];
+        let input = Tensor::new(&input_val, Dim4::new(&[4, 4, 2, 2]));
+
+        let mut layer = create_test_layer();
+        let layer_output = layer.compute_activation_mut(&input);
+
+        let mut output: [PrimitiveType; 16] = [0.; 16];
+        layer_output.host(&mut output);
+        let expected_output = [5., 7., 6., 8., 8., 3., 9., 5., 6., 1., 8., 6., 9., 5., 2., 8.];
+
+        assert_approx_eq

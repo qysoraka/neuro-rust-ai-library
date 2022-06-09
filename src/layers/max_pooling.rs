@@ -150,4 +150,35 @@ impl Layer for MaxPool2D {
         let stride = max_pool.new_dataset::<[u64; 2]>().create("stride", 1)?;
         stride.write(&[[self.stride.0, self.stride.1]])?;
 
-        let input_shape = max_pool
+        let input_shape = max_pool.new_dataset::<[u64; 4]>().create("input_shape", 1)?;
+        input_shape.write(&[*self.input_shape.get()])?;
+
+        let output_shape = max_pool.new_dataset::<[u64; 4]>().create("output_shape", 1)?;
+        output_shape.write(&[*self.output_shape.get()])?;
+
+        Ok(())
+    }
+}
+
+
+impl fmt::Display for MaxPool2D {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} \t 0 \t\t [{}, {}, {}]", Self::NAME, self.output_shape[0], self.output_shape[1], self.output_shape[2])
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use arrayfire::*;
+    use crate::layers::{MaxPool2D, Layer};
+    use crate::assert_approx_eq;
+    use crate::tensor::*;
+
+    fn create_test_layer() -> MaxPool2D {
+        MaxPool2D {
+            pool_size: (2, 2),
+            stride: (2, 2),
+            input_shape: Dim::new(&[4, 4, 2, 1]),
+            output_shape: Dim::new(&[2, 2, 2, 1]),
+            row_indices: Array::new(&[0], Dim4::new(

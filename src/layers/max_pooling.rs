@@ -199,4 +199,19 @@ mod tests {
         layer_output.host(&mut output);
         let expected_output = [5., 7., 6., 8., 8., 3., 9., 5., 6., 1., 8., 6., 9., 5., 2., 8.];
 
-        assert_approx_eq
+        assert_approx_eq!(expected_output, output);
+    }
+
+    #[test]
+    fn test_maxpool2d_backward() {
+        // Generate array of dimension [3 4 1 2]
+        let input_val = [3., -1., -8., 2., 5., -4., 1., 7., 0., 3., 1., 1., -2., 6., 8., -5., -1., 8., 3., -4., 5., 6., -2., 0., -1., -3., -8., 4., 2., 9., -1., 5., 6., -1., 0., 1., 4., -2., -3., 1., 5., 8., -2., 6., 5., 3., 1., -4., 2., 9., -7., 5., 1., 4., 0., 3., -2., -6., 1., 8., -7., 2., -3., -1.];
+        let input_forward = Tensor::new(&input_val, Dim4::new(&[4, 4, 2, 2]));
+
+        let mut layer = create_test_layer();
+        let _ = layer.compute_activation_mut(&input_forward);
+
+        let input_backward = Tensor::new(&[-1., 2., 3., 1., -2., 4., -1., 1., 2., 1.,-3., 1., -2., 0., 1., 4.], Dim::new(&[2, 2, 2, 2]));
+        let layer_output = layer.compute_dactivation_mut(&input_backward);
+        let mut output: [PrimitiveType; 64] = [0.; 64];
+        layer_output.h

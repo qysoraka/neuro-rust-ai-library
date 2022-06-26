@@ -46,4 +46,20 @@ pub trait Layer: std::fmt::Display {
     fn parameters(&self) -> Option<Vec<&Tensor>> { None }
 
     /// Returns the trainable parameters of the layer and their derivatives.
-    fn parameters_mut(&mut self) -> Op
+    fn parameters_mut(&mut self) -> Option<(Vec<&mut Tensor>, Vec<&Tensor>)> { None }
+
+    /// Writes the parameters of the layer in the HDF5 group.
+    ///
+    /// # Arguments
+    ///
+    /// * `group`: The HDF5 group where the layer will be saved.
+    /// * `layer_number`: The position of the layer in the network.
+    fn save(&self, group: &hdf5::Group, layer_number: usize) -> Result<(), Error>;
+
+    /// Sets the regularizer for the layer.
+    fn set_regularizer(&mut self, _regularizer: Option<Regularizer>) {}
+
+    /// Displays the properties of the layer.
+    fn print(&self) {}
+}
+

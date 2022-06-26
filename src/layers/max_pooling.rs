@@ -214,4 +214,7 @@ mod tests {
         let input_backward = Tensor::new(&[-1., 2., 3., 1., -2., 4., -1., 1., 2., 1.,-3., 1., -2., 0., 1., 4.], Dim::new(&[2, 2, 2, 2]));
         let layer_output = layer.compute_dactivation_mut(&input_backward);
         let mut output: [PrimitiveType; 64] = [0.; 64];
-        layer_output.h
+        layer_output.host(&mut output);
+        let expected_output: [PrimitiveType; 64] = [0., 0., 0., 0., -1., 0., 0., 2., 0., 0., 0., 0., 0., 3., 1., 0., 0., -2., 4., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., -1., 0., 1., 2., 0., 0., 1., 0., 0., 0., 0., 0., -3., 0., 1., 0., 0., 0., 0., 0., -2., 0., 0., 0., 0., 0., 0., 0., 0., 0., 4., 0., 1., 0., 0.];
+    }
+}

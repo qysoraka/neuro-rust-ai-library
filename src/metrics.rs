@@ -59,4 +59,15 @@ mod tests {
     use crate::metrics::Metrics;
     use crate::*;
 
-  
+    #[test]
+    fn test_accuracy() {
+        let predictions = [0.1, 0.3, 0.6, 0.15, 0.8, 0.05, 0.6, 0.3, 0.1];
+        let true_values = [0., 0., 1., 0., 1., 0., 0., 1., 0.];
+        let y_pred = Array::new(&predictions, Dim4::new(&[3, 1, 1, 3]));
+        let y_true = Array::new(&true_values, Dim4::new(&[3, 1, 1, 3]));
+
+        let metrics = Metrics::Accuracy;
+        let score = metrics.eval(&y_pred, &y_true);
+        assert_approx_eq!([score], [0.6666666]);
+    }
+}

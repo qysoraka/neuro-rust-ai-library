@@ -28,4 +28,35 @@ impl Metrics {
 
                 let (predicted_class, true_class) = if num_classes == 1 {
                     let predicted_class = select(&constant(1u32, y_pred.dims()), &ge(y_pred, &0.5, true), &constant(0u32, y_pred.dims()));
-                    let true_class = select(&constant(1u32, y_true.dims()), &ge(y_true, &0.5, true), &constant(0u32, y_true.dims()))
+                    let true_class = select(&constant(1u32, y_true.dims()), &ge(y_true, &0.5, true), &constant(0u32, y_true.dims()));
+                    (predicted_class, true_class)
+                } else {
+                    let predicted_class = imax(y_pred, 0).1;
+                    let true_class = imax(y_true, 0).1;
+                    (predicted_class, true_class)
+                };
+
+                let correctly_classified = eq(&predicted_class, &true_class, true);
+                let accuracy = count_all(&correctly_classified);
+
+                accuracy.0 as PrimitiveType / batch_size as PrimitiveType
+            },
+            /*
+            Metrics::FScore => { unimplemented!() },
+            Metrics::LogLoss => { unimplemented!() },
+            Metrics::MeanAbsoluteError => { unimplemented!() },
+            Metrics::MeanSquaredError => { unimplemented!() },
+            Metrics::RSquared => { unimplemented!() }
+            */
+        }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use arrayfire::*;
+    use crate::metrics::Metrics;
+    use crate::*;
+
+  

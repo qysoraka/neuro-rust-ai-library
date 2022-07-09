@@ -424,3 +424,112 @@ impl Network
 
         let output_shape = file.new_dataset::<[u64; 4]>().create("output_shape", 1)?;
         output_shape.write(&[*self.output_shape.get()])?;
+
+        if let Some(classes) = &self.classes {
+            let classes_ds = file.new_dataset::<hdf5::types::VarLenUnicode>().create("classes", classes.len())?;
+            let mut str = Vec::<hdf5::types::VarLenUnicode>::new();
+            for class in classes {
+                str.push(hdf5::types::VarLenUnicode::from_str(class).unwrap());
+            }
+            classes_ds.write(&str[..])?;
+        }
+
+        let layers_group = create_group(&file, "layers");
+        for (i, layer) in self.layers.iter().enumerate() {
+            layer.save(&layers_group, i)?;
+        }
+
+        println!("Model saved in: {}", filename);
+        Ok(())
+    }
+
+    /// Loads a model from a HDF5 file.
+    pub fn load(filename: &str) -> Result<Network, Error> {
+        let _ = hdf5::silence_errors();
+        let file = hdf5::File::open(filename);
+        match file {
+            Ok(file) => {
+
+                // Shapes
+                let input_shape = file.dataset("input_shape").and_then(|shape| shape.read_raw::<[u64; 4]>()).expect("No input shape in the file");
+                let output_shape = file.dataset("output_shape").and_then(|shape| shape.read_raw::<[u64; 4]>()).expect("Could not retrieve the output shape");
+
+                // Layers
+                let mut layers: Vec<Box<dyn Layer>> = Vec::new();
+                let layers_group = file.group("layers").expect("Could not retrieve the layers.");
+                let layers_name = list_subgroups(&layers_group);
+                for layer in &layers_name {
+                    let group = layers_group.group(layer).unwrap();
+                    let layer_type: Vec<&str> = layer.split('_').collect();
+
+                    match layer_type[1] {
+                        BatchNorm::NAME => layers.push(BatchNorm::from_hdf5_group(&group)),
+                        Conv2D::NAME => layers.push(Conv2D::from_hdf5_group(&group)),
+                        Dense::NAME =>  layers.push(Dense::from_hdf5_group(&group)),
+                        Dropout::NAME => layers.push(Dropout::from_hdf5_group(&group)),
+                        Flatten::NAME => layers.push(Flatten::from_hdf5_group(&group)),
+                        MaxPool2D::NAME => layers.push(MaxPool2D::from_hdf5_group(&group)),
+                        _ => panic!("Unknown layer."),
+                    }
+                }
+
+                // Optimizer
+                let optimizer_group = file.group("optimizer").expect("Could not retrieve the optimizer.");
+                let opt_type = optimizer_group.dataset("type").and_then(|ds| ds.read_raw::<hdf5::types::VarLenUnicode>()).expect("Could not retrieve the optimizer type.");
+                let optimizer: Box<dyn Optimizer> = match opt_type[0].as_str() {
+                    Adam::NAME => Adam::from_hdf5_group(&optimizer_group),
+                    AdaDelta::NAME => AdaDelta::from_hdf5_group(&optimizer_group),
+                    RMSProp::NAME => RMSProp::from_hdf5_group(&optimizer_group),
+                    SGD::NAME => SGD::from_hdf5_group(&optimizer_group),
+                    _ => panic!("Unknown optimizer."),
+                };
+
+                let loss_function_id = file.dataset("loss").and_then(|loss| loss.read_raw::<u64>()).expect("No loss function in the file");
+                let loss_function = loss_from_id(loss_function_id[0]);
+
+                let regularizer = Regularizer::from_hdf5_group(&file);
+
+                let classes = if let Ok(classes_group) = file.dataset("classes") {
+                    let classes_vec = classes_group
+                        .read_raw::<hdf5::types::VarLenUnicode>()
+                        .unwrap()
+                        .iter()
+                        .map(|entry| String::from(entry.as_str()))
+                        .collect::<Vec<String>>();
+                    Some(classes_vec)
+                } else { None };
+
+                Ok(Network {
+                    layers,
+                    loss_function,
+                    optimizer,
+                    regularizer,
+                    input_shape: Dim::new(&input_shape[0]),
+                    output_shape: Dim::new(&output_shape[0]),
+                    classes
+                })
+            },
+            Err(err) => Err(Error::from(err)),
+        }
+    }
+}
+
+
+impl fmt::Display for Network
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "=====")?;
+        writeln!(f, "Model")?;
+        writeln!(f, "=====")?;
+        writeln!(f, "Input shape: [{}, {}, {}]", self.input_shape[0], self.input_shape[1], self.input_shape[2])?;
+        writeln!(f, "Output shape: [{}, {}, {}]", self.output_shape[0], self.output_shape[1], self.output_shape[2])?;
+        writeln!(f, "Optimizer: {}", self.optimizer.name())?;
+        if let Some(regularizer) = self.regularizer { writeln!(f, "Regularizer: {}", regularizer)?; }
+        writeln!(f, "\nLayer \t\t Parameters \t Output shape")?;
+        writeln!(f, "---------------------------------------------")?;
+        for layer in self.layers.iter() {
+            writeln!(f, "{}", layer)?;
+        }
+        Ok(())
+    }
+}
